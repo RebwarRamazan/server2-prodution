@@ -54,8 +54,29 @@ exports.getTotalGN = async (req, res) => {
         $project : {
           _id:0
         }
-      }
+      } 
     ])
+
+
+    const getTCostQarz=  await qarz.aggregate([
+      {
+          $lookup: {
+              from: "cars",
+              localField: "carId",
+              foreignField: "_id",
+              as: "car"
+          }
+      },
+      {
+          $group: {
+              _id: null,
+              TCostQarz : { $sum: { $sum: '$car.price'  } },
+          }
+      }
+
+  ]);
+
+  console.log(JSON.stringify(getTCostQarz))
 
     if (getAll.length < 1 && !getpriceSold) {
       return res.status(404).json({
