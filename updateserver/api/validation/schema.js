@@ -147,11 +147,13 @@ exports.signupUpdate = joi.object({
     email: email,
     userName: str,
     password: password,
-    TotalBals: num
+    TotalBals: num,
+    userRole: str
+
 })
 
 exports.userRole = joi.object({
-    userRole: role
+    userRole: role 
 })
 
 exports.loging = joi.object({
