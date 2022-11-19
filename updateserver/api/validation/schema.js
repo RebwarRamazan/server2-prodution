@@ -193,6 +193,10 @@ exports.history = joi.object({
     carId: _id.optional(),
     userId: str.optional(),
     action: str,
+    isSoled: bool,
+    isPaid:bool,
+    note: str,
+
 }).xor('amount', 'carId').messages({
     'object.missing': 'must contain at least one of  [Amount or car] ',
     'object.xor': 'of [Amount or car] together not allowed'

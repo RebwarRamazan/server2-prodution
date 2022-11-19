@@ -5,6 +5,8 @@ const authn = require('../middleware/check-auth')
 const authr = require('../middleware/checkAuthr')
 
 router.get('/', authn, authr.isAdmin, validation.search, validation.dateFormat, controller.getBals);
+router.get('/reseller', authn, authr.isAdmin, validation.search, validation.dateFormat, controller.getResellerBals);
+
 router.get('/:Id', authn, authr.isAdmin, validation.search, validation.dateFormat, validation._Id, controller.getBalByID);
 router.post('/', authn, authr.isAdmin, validation.history, controller.createBal);
 router.patch('/:Id', authn, authr.isAdmin, validation.historyUpdate, controller.updateBal);

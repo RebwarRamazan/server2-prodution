@@ -109,6 +109,11 @@ exports.qarzUpdate = (req, res, next) => {
 }
 
 exports.history = (req, res, next) => {
+    if(req.body.isSold)
+    req.body.isSold = (req.body.isSold == 1) ? true : false;
+    if(req.body.isPaid)
+    req.body.isPaid = (req.body.isPaid == 1) ? true : false;
+
     const { error, value } = history.validate(req.body)
     if (error)
         return res.status(400).json({ mssage: 'Bad Request', error: `${error.details[0].context.label} ${error.message}` })
