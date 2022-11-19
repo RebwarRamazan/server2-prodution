@@ -6,16 +6,16 @@ const authr = require('../middleware/checkAuthr')
 
 router.get('/', validation.dateFormat, controller.getCars);
 router.get('/:Id',
-// authn,
-// authr.isAdmin,
-// validation._Id, 
+authn,
+authr.isAdmin,
+validation._Id, 
 controller.getCarById);
 router.get('/isArr/:bool', authn,authr.isAdmin, validation.bool, controller.getCarsArr);
 router.get('/isSoled/:bool', authn,authr.isAdmin, validation.bool,controller.getCarsSoled);
 router.get('/isSoled/:bool/tobalance/:string', controller.getCarsSoledLoan);
 router.post('/', 
-// authn,
-// authr.isAdmin,
+authn,
+authr.isAdmin,
 validation.carPost,
 controller.createCar);
 router.patch('/:Id',authn,authr.isAdmin,validation._Id,validation.carUpdate, controller.updateCar);

@@ -57,10 +57,6 @@ exports.getTotalGN = async (req, res) => {
       } 
     ])
 
-    console.log(getCostSold)
-
-
-
     const [getTCostQarz]=  await qarz.aggregate([
       {
           $lookup: {
@@ -97,7 +93,8 @@ exports.getTotalGN = async (req, res) => {
 
 
     if (getpriceSold)
-      bnft = getpriceSold.totlPrice - sum
+      bnft = getpriceSold.totl
+      Price - sum
     if (getAll) {
       getAll[0].totalbenefit = bnft;
       getAll[0].totalpriceSold = getpriceSold?.totlPrice
