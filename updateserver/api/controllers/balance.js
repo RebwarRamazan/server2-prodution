@@ -23,12 +23,8 @@ exports.getBals = async (req, res) => {
     const searchDB = {
         $and: [
             { "user.userName": { $regex: regex } },
-            {
-                $or: [
-                    { isPaid: { $exists: false } },
-                    { isSold: { $exists: false } }
-                ]
-            },
+            { isPaid: { $exists: false } },
+            { isSoled: { $exists: false } },
             {
                 actionDate: {
                     $gte: start,
@@ -105,7 +101,7 @@ exports.getBals = async (req, res) => {
         for (var item in carList) {
             cars[item] = {
                 userName: carList[item].userName[0], userId: carList[item].userid, _id: carList[item]._id,
-                amount: carList[item].amount, carId: carList[item].carid[0], car_modeName: carList[item].car_modeName[0],
+                amount: carList[item].amount, carId: carList[item].carid[0], modeName: carList[item].car_modeName[0],
                 action: carList[item].action, actionDate: (carList[item].actionDate).toJSON().split("T")[0]
             }
         }
@@ -323,7 +319,7 @@ exports.getResellerBals = async (req, res) => {
                     _id: null,
                     carList: {
                         $push: {
-                            userName: '$user.userName', action: '$action', actionDate: '$actionDate'
+                            userName: '$user.userName', action: '$action', actionDate: '$actionDate', note : '$note'
                             , isSoled: '$isSoled', userid: '$userId', carid: '$car._id', car_modeName: '$car.modeName', _id: '$_id'
                         }
                     }
@@ -339,8 +335,8 @@ exports.getResellerBals = async (req, res) => {
 
         for (var item in carList) {
             cars[item] = {
-                userName: carList[item].userName[0], userId: carList[item].userid, _id: carList[item]._id,
-                isSoled: carList[item].isSoled, carId: carList[item].carid[0], car_modeName: carList[item].car_modeName[0],
+                userName: carList[item].userName[0], userId: carList[item].userid, _id: carList[item]._id,note:carList[item].note,
+                isSoled: carList[item].isSoled, carId: carList[item].carid[0], modeName: carList[item].car_modeName[0],
                 action: carList[item].action, actionDate: (carList[item].actionDate).toJSON().split("T")[0]
             }
         }
@@ -355,5 +351,346 @@ exports.getResellerBals = async (req, res) => {
         res.status(500).json({
             error: e
         })
+    }
+}
+
+exports.getResellerBalsById = async (req, res) => {
+
+    let carList, cars = [];
+
+    let { search, page, limit, sdate, edate } = req.query
+
+    var startDate = (sdate) ? sdate : '2020-10-10';
+    var endDate = (edate) ? edate : '3000-10-10';
+    const start = new Date([startDate, "03:00:00"])
+    const end = new Date([endDate, "24:00:00"])
+
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 10;
+    const regex = new RegExp(search, "i")
+    const skip = notSearch(page)(limit)
+
+    const searchDB = {
+        $and: [
+            { userId: mongoose.Types.ObjectId(req.params.Id)},
+            { isSoled: { $exists: true } },
+            {
+                actionDate: {
+                    $gte: start,
+                    $lte: end
+                }
+            }
+        ]
+    }
+    try {
+         const getTotal = await bal.find(searchDB).countDocuments();
+
+        if (getTotal < 1) {
+            return res.status(404).json({
+                message: "Not Found"
+            });
+        }
+        
+        const getQarz = await bal.aggregate([
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $lookup: {
+                    from: "cars",
+                    localField: "carId",
+                    foreignField: "_id",
+                    as: "car"
+                }
+            },
+            {
+                $match: searchDB
+            },
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $group: {
+                    _id: null,
+                    carList: {
+                        $push: {
+                            userName: '$user.userName', action: '$action', actionDate: '$actionDate', note : '$note'
+                            , isSoled: '$isSoled', userid: '$userId', carid: '$car._id', car_modeName: '$car.modeName', _id: '$_id'
+                        }
+                    }
+
+                }
+            }
+
+        ]);
+
+        [{ _id, carList }] = getQarz;
+
+        for (var item in carList) {
+            cars[item] = {
+                userName: carList[item].userName[0], userId: carList[item].userid, _id: carList[item]._id,note : carList[item].note,
+                isSoled: carList[item].isSoled, carId: carList[item].carid[0], modeName: carList[item].car_modeName[0],
+                action: carList[item].action, actionDate: (carList[item].actionDate).toJSON().split("T")[0]
+            }
+        }
+
+
+        res.status(200).json({
+            History: cars,
+            total: getTotal
+
+        })
+    } catch (e) {
+        res.status(500).json({
+            error: e 
+        })
+    }
+}
+
+
+exports.getQarzBals = async (req, res) => {
+
+    let carList, cars = [];
+
+    let { search, page, limit, sdate, edate } = req.query
+
+    var startDate = (sdate) ? sdate : '2020-10-10';
+    var endDate = (edate) ? edate : '3000-10-10';
+    const start = new Date([startDate, "03:00:00"])
+    const end = new Date([endDate, "24:00:00"])
+
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 10;
+    const regex = new RegExp(search, "i")
+    const skip = notSearch(page)(limit)
+
+    const searchDB = {
+        $and: [
+            { "user.userName": { $regex: regex } },
+            { isPaid: { $exists: true } },
+            {
+                actionDate: {
+                    $gte: start,
+                    $lte: end
+                }
+            }
+        ]
+    }
+
+    try {
+
+
+        const getTotal = await bal.aggregate([
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $match: searchDB
+            },
+            { $count: "total" }
+        ]);
+        if (getTotal < 1) {
+            return res.status(404).json({
+                message: "Not Found"
+            });
+        }
+
+        const getQarz = await bal.aggregate([
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $lookup: {
+                    from: "cars",
+                    localField: "carId",
+                    foreignField: "_id",
+                    as: "car"
+                }
+            },
+            {
+                $match: searchDB
+            },
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $group: {
+                    _id: null,
+                    carList: {
+                        $push: {
+                            userName: '$user.userName', action: '$action', actionDate: '$actionDate'
+                            , isPaid: '$isPaid', userid: '$userId',amount : "$amount", note : '$note',
+                             carid: '$car._id', car_modeName: '$car.modeName', _id: '$_id'
+
+                        }
+                    }
+
+                }
+            }
+
+        ]);
+
+
+        [{ total }] = getTotal;
+        [{ _id, carList }] = getQarz;
+
+        for (var item in carList) {
+            cars[item] = {
+                userName: carList[item].userName[0], userId: carList[item].userid, _id: carList[item]._id,note:carList[item].note,
+                isPaid: carList[item].isPaid, carId: carList[item].carid[0], modeName: carList[item].car_modeName[0],
+                action: carList[item].action, actionDate: (carList[item].actionDate).toJSON().split("T")[0],amount : carList[item].amount
+            }
+        }
+
+
+        res.status(200).json({
+            History: cars,
+            total: getTotal
+
+        })
+    } catch (e) {
+        res.status(500).json({
+            error: e
+        })
+    }
+}
+
+exports.getQarzBalsById = async (req, res) => {
+
+    let carList, cars = [];
+
+    let { search, page, limit, sdate, edate } = req.query
+
+    var startDate = (sdate) ? sdate : '2020-10-10';
+    var endDate = (edate) ? edate : '3000-10-10';
+    const start = new Date([startDate, "03:00:00"])
+    const end = new Date([endDate, "24:00:00"])
+
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 10;
+    const regex = new RegExp(search, "i")
+    const skip = notSearch(page)(limit)
+
+    const searchDB = {
+        $and: [
+            { userId: mongoose.Types.ObjectId(req.params.Id)},
+             { isPaid: { $exists: true } },
+            {
+                actionDate: {
+                    $gte: start,
+                    $lte: end
+                }
+            }
+        ]
+    }
+    try {
+         const getTotal = await bal.find(searchDB).countDocuments();
+
+        if (getTotal < 1) {
+            return res.status(404).json({
+                message: "Not Found"
+            });
+        }
+        
+        const getQarz = await bal.aggregate([
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $lookup: {
+                    from: "cars",
+                    localField: "carId",
+                    foreignField: "_id",
+                    as: "car"
+                }
+            },
+            {
+                $match: searchDB
+            },
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $group: {
+                    _id: null,
+                    carList: {
+                        $push: {
+                            userName: '$user.userName', action: '$action', actionDate: '$actionDate'
+                            , isPaid: '$isPaid', userid: '$userId',amount : "$amount", note : '$note',
+                             carid: '$car._id', car_modeName: '$car.modeName', _id: '$_id'
+
+                        }
+                    }
+
+                }
+            }
+
+        ]);
+
+        [{ _id, carList }] = getQarz;
+
+       
+        for (var item in carList) {
+            cars[item] = {
+                userName: carList[item].userName[0], userId: carList[item].userid, _id: carList[item]._id,note:carList[item].note,
+                isPaid: carList[item].isPaid, carId: carList[item].carid[0], modeName: carList[item].car_modeName[0],
+                action: carList[item].action, actionDate: (carList[item].actionDate).toJSON().split("T")[0],amount : carList[item].amount
+            }
+        }
+
+
+        res.status(200).json({
+            History: cars,
+            total: getTotal
+
+        })
+    } catch (e) {
+        res.status(500).json({
+            error: e 
+        })
+    }
+}
+
+
+
+exports.getByID = async (req, res) => {
+
+
+    try {
+        const balHistory = await bal
+        .findById(req.params.Id)
+        .select({ userId: 0, __v: 0 })
+        .populate('carId userId')
+
+        if (!balHistory) {
+            return res.status(404).json({
+                message: "Not Found",
+            });
+        }
+        res.status(200).json({
+            History: balHistory,
+        })
+    }
+    catch (e) {
+        res.status(500).json({
+            message: "Internal Server Error"
+        });
     }
 }

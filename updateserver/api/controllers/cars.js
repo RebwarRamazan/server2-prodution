@@ -63,7 +63,7 @@ exports.getCarById = async (req, res) => {
 exports.getCarsSoled = async (req, res) => {
   const isSoled = req.params.bool
   let { search, page, limit } = req.query
-  page = parseInt(page, 10) || 1;
+  page = parseInt(page, 10) || 1; 
   limit = parseInt(limit, 10) || 10;
   const regex = new RegExp(search, "i")
   const skip = notSearch(page)(limit)

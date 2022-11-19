@@ -6,8 +6,12 @@ const authr = require('../middleware/checkAuthr')
 
 router.get('/', authn, authr.isAdmin, validation.search, validation.dateFormat, controller.getBals);
 router.get('/reseller', authn, authr.isAdmin, validation.search, validation.dateFormat, controller.getResellerBals);
+router.get('/reseller/:Id', authn, authr.isAdmin,validation._Id,validation.search, validation.dateFormat, controller.getResellerBalsById);
+router.get('/qarz', authn, authr.isAdmin, validation.search, validation.dateFormat, controller.getQarzBals);
+router.get('/qarz/:Id', authn, authr.isAdmin,validation._Id,validation.search, validation.dateFormat, controller.getQarzBalsById);
+router.get('/:Id', authn, authr.isAdmin,validation._Id, validation.search, validation.dateFormat, controller.getBalByID);
+router.get('/detail/:Id', authn, authr.isAdmin, validation._Id, controller.getByID);
 
-router.get('/:Id', authn, authr.isAdmin, validation.search, validation.dateFormat, validation._Id, controller.getBalByID);
 router.post('/', authn, authr.isAdmin, validation.history, controller.createBal);
 router.patch('/:Id', authn, authr.isAdmin, validation.historyUpdate, controller.updateBal);
 router.delete('/:Id', authn, authr.isAdmin, validation._Id, controller.deleteBal);

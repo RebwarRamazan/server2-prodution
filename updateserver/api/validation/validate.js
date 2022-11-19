@@ -109,10 +109,6 @@ exports.qarzUpdate = (req, res, next) => {
 }
 
 exports.history = (req, res, next) => {
-    if(req.body.isSold)
-    req.body.isSold = (req.body.isSold == 1) ? true : false;
-    if(req.body.isPaid)
-    req.body.isPaid = (req.body.isPaid == 1) ? true : false;
 
     const { error, value } = history.validate(req.body)
     if (error)

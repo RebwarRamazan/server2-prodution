@@ -30,7 +30,7 @@ exports.getTotalGN = async (req, res) => {
     const [getpriceSold] = await cost.aggregate([
       { $match: { isSold: true } },
       {
-        $group: {
+        $group: { 
           _id: null,
           totlPrice: { $sum: "$price" }
         }
@@ -43,12 +43,12 @@ exports.getTotalGN = async (req, res) => {
         $group: {
           _id: null,
           totalpricePaidbid: { $sum: "$pricePaidbid" },
-          totalCoCCost: { $sum: "$CoCCost" },
-          totalTransportationCost: { $sum: { $sum: ["$TransportationCostFromAmericaLocationtoDubaiGCostTranscost", "$TransportationCostFromAmericaLocationtoDubaiGCostgumrgCost", "$DubaiToIraqGCostTranscost", "$DubaiToIraqGCostgumrgCost"] } },
-          totalFeesinAmerica: { $sum: { $sum: ["$FeesinAmericaStoragefee", "$FeesinAmericaCopartorIAAfee"] } },
-          totalFeesAndRepaidCostDubai: { $sum: { $sum: ["$FeesAndRepaidCostDubairepairCost", "$FeesAndRepaidCostDubaiFees", "$FeesAndRepaidCostDubaiothers"] } },
-          totalFeesRaqamAndRepairCostinKurdistan: { $sum: { $sum: ["$RaqamAndRepairCostinKurdistanrepairCost", "$RaqamAndRepairCostinKurdistanRaqam", "$RaqamAndRepairCostinKurdistanothers"] } }
-        }
+          totalCoCCost: { $sum: "$coCCost" },
+          totalTransportationCost: { $sum: { $sum: ["$transportationCostFromAmericaLocationtoDubaiGCostTranscost", "$transportationCostFromAmericaLocationtoDubaiGCostgumrgCost", "$dubaiToIraqGCostTranscost", "$dubaiToIraqGCostgumrgCost"] } },
+          totalFeesinAmerica: { $sum: { $sum: ["$feesinAmericaStoragefee", "$feesinAmericaCopartorIAAfee"] } },
+          totalFeesAndRepaidCostDubai: { $sum: { $sum: ["$feesAndRepaidCostDubairepairCost", "$feesAndRepaidCostDubaiFees", "$feesAndRepaidCostDubaiothers"] } },
+          totalFeesRaqamAndRepairCostinKurdistan: { $sum: { $sum: ["$raqamAndRepairCostinKurdistanrepairCost", "$raqamAndRepairCostinKurdistanRaqam", "$rsaqamAndRepairCostinKurdistanothers"] } }
+}
       }, 
       {
         $project : {
@@ -57,8 +57,11 @@ exports.getTotalGN = async (req, res) => {
       } 
     ])
 
+    console.log(getCostSold)
 
-    const getTCostQarz=  await qarz.aggregate([
+
+
+    const [getTCostQarz]=  await qarz.aggregate([
       {
           $lookup: {
               from: "cars",
@@ -72,11 +75,14 @@ exports.getTotalGN = async (req, res) => {
               _id: null,
               TCostQarz : { $sum: { $sum: '$car.price'  } },
           }
+      }, 
+      {
+        $project : {
+          _id:0
+        }
       }
 
   ]);
-
-  console.log(JSON.stringify(getTCostQarz))
 
     if (getAll.length < 1 && !getpriceSold) {
       return res.status(404).json({
@@ -88,6 +94,8 @@ exports.getTotalGN = async (req, res) => {
       for (const props in getCostSold) {
         sum += getCostSold[props]
       }
+
+
     if (getpriceSold)
       bnft = getpriceSold.totlPrice - sum
     if (getAll) {
@@ -95,6 +103,7 @@ exports.getTotalGN = async (req, res) => {
       getAll[0].totalpriceSold = getpriceSold?.totlPrice
       getAll[0].totalCostSold = sum
       getAll[0].carNumber = await car.countDocuments();
+      getAll[0].totalCostQarzCar = getTCostQarz?.TCostQarz
     }
     res.status(200).json({
       TotalList: getAll,
@@ -113,7 +122,7 @@ exports.getTotalOwe = async (req, res) => {
     const getQarz = await qarz.aggregate([
 
       { $match: { isPaid: false } },
-      {
+      { 
         $lookup: {
           from: "cars",
           localField: "carId",
